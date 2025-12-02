@@ -9,15 +9,19 @@ Leverages on Tweepy package to connect to Twitter API endpoint
 '''
 
 import tweepy
-
-#Get API keys
-from configparser import ConfigParser
-config = ConfigParser()
-config.read('config.ini')
-ckey = config.get('twitter', 'ckey')
-csecret = config.get('twitter', 'csecret')
-atoken = config.get('twitter', 'atoken')
-asecret = config.get('twitter', 'asecret')
+import os
+ckey = os.environ.get('TWITTER_CKEY')
+csecret = os.environ.get('TWITTER_CSECRET')
+atoken = os.environ.get('TWITTER_ATOKEN')
+asecret = os.environ.get('TWITTER_ASECRET')
+#Get API keys from env
+# from configparser import ConfigParser
+# config = ConfigParser()
+# config.read('config.ini')
+# ckey = config.get('twitter', 'ckey')
+# csecret = config.get('twitter', 'csecret')
+# atoken = config.get('twitter', 'atoken')
+# asecret = config.get('twitter', 'asecret')
 
 ## TODO: IMPLEMENT ERROR HANDLING IF EXCESS 140 CHAR
 

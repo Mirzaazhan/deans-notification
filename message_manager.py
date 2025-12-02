@@ -15,6 +15,7 @@ import twitter_client
 import json
 import traceback
 import email_client
+import os
 
 app = Flask(__name__)
 report_count = 1
@@ -105,9 +106,17 @@ def generate_report():
     return Response(json.dumps(json_response), status=201, mimetype='application/json')
 
 if __name__ == '__main__':
-    import os
-    if('IN_DOCKER' in os.environ and os.environ['IN_DOCKER']=='1'):
-        DEBUG = not ('PRODUCTION' in os.environ and os.environ['PRODUCTION']=='1')
-        app.run(host='0.0.0.0', port=8000, debug=DEBUG)
-    else:
-         app.run(host='127.0.0.1', port=8000, debug=True)
+    IS_IN_DOCKER = ('IN_DOCKER' in os.environ and os.environ['IN_DOCKER']=='1')
+    IS_PRODUCTION = ('PRODUCTION' in os.environ and os.environ['PRODUCTION']=='1')
+
+    DEBUG = not IS_PRODUCTION
+
+    HOST = '0.0.0.0' if IS_IN_DOCKER else '127.0.0.1'
+
+    app.run(host=HOST, port=8000, debug=DEBUG)
+
+    # if('IN_DOCKER' in os.environ and os.environ['IN_DOCKER']=='1'):
+    #     DEBUG = not ('PRODUCTION' in os.environ and os.environ['PRODUCTION']=='1')
+    #     app.run(host='0.0.0.0', port=8000, debug=DEBUG)
+    # else:
+    #      app.run(host='127.0.0.1', port=8000, debug=True)
