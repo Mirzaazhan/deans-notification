@@ -1,110 +1,103 @@
-'''
-Written by Michelle Lim Shi Hui & Nicholas Phang
-Dean's Crisis Management System - Notification Subsystem
-For CZ3003 Software System Analysis & Design
-
-Email Manager -
-Takes in email address list & message, formats it, and sends out the email
-Leverages on smtplib
-'''
-
 import smtplib
+import logging
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from email.mime.base import MIMEBase
-from email import encoders
 from datetime import datetime
-
-import pprint
-
-#Get API keys
 from configparser import ConfigParser
+
+# -------------------------------------------------------------
+# Logging Setup
+# -------------------------------------------------------------
+logging.basicConfig(
+    filename='notification.log',
+    level=logging.INFO,
+    format='%(asctime)s [%(levelname)s] %(message)s'
+)
+
+# -------------------------------------------------------------
+# Load Gmail Credentials
+# -------------------------------------------------------------
 config = ConfigParser()
 config.read('config.ini')
+
 user = config.get('gmail', 'user')
 password = config.get('gmail', 'password')
 
-def prettyPrintReport(data):
-    message = ""
-    message += "-------------------------------------------------------------------------------------------\n"
-    message += "                          New Crises Reported in Past 30 Minutes     \n"
-    message += "-------------------------------------------------------------------------------------------\n\n"
 
-    for crisis in data['new_crisis']:
-        message += "Report Time: " + crisis['crisis_time'] + "\n"
-        message += "Location: " + crisis['location'] + "\n"
-        message += "Location2: " + crisis['location2'] + "\n"
-        message += "Crisis Type: " + crisis['type'] + "\n"
-        message += "Assistance Requested: " + crisis['crisis_assistance'] + "\n"
-        message += "Description: " + crisis['crisis_description'] + "\n"
-        message += "\n"
-    message += "-------------------------------------------------------------------------------------------\n"
-    message += "                          Crises Resolved in Past 30 Minutes       \n"
-    message += "-------------------------------------------------------------------------------------------\n\n"
-    for crisis in data['recent_resolved_crisis']:
-        message += "Report Time: " + crisis['crisis_time'] + "\n"
-        message += "Location: " + crisis['location'] + "\n"
-        message += "Location2: " + crisis['location2'] + "\n"
-        message += "Crisis Type: " + crisis['type'] + "\n"
-        message += "Assistance Requested: " + crisis['crisis_assistance'] + "\n"
-        message += "Description: " + crisis['crisis_description'] + "\n"
-        message += "\n"
+# -------------------------------------------------------------
+# Helper to Format Crisis Sections Using Templates
+# -------------------------------------------------------------
+def generate_section(crisis_list):
+    """Generate formatted lines from a list of crisis dictionaries."""
+    if not crisis_list:
+        return "No items reported.\n"
 
-    message += "-------------------------------------------------------------------------------------------\n"
-    message += "                          Current Unresolved Crisis           \n"
-    message += "-------------------------------------------------------------------------------------------\n\n"
-    for crisis in data['active_crisis']:
-        message += "Report Time: " + crisis['crisis_time'] + "\n"
-        message += "Location: " + crisis['location'] + "\n"
-        message += "Location2: " + crisis['location2'] + "\n"
-        message += "Crisis Type: " + crisis['type'] + "\n"
-        message += "Assistance Requested: " + crisis['crisis_assistance'] + "\n"
-        message += "Description: " + crisis['crisis_description'] + "\n"
-        message += "\n"
-
-    return message
+    lines = []
+    for crisis in crisis_list:
+        lines.append(
+            f"Report Time: {crisis.get('crisis_time', 'N/A')}\n"
+            f"Location: {crisis.get('location', 'N/A')}\n"
+            f"Location2: {crisis.get('location2', 'N/A')}\n"
+            f"Crisis Type: {crisis.get('type', 'N/A')}\n"
+            f"Assistance Requested: {crisis.get('crisis_assistance', 'N/A')}\n"
+            f"Description: {crisis.get('crisis_description', 'N/A')}\n"
+        )
+    return "\n".join(lines)
 
 
+# -------------------------------------------------------------
+# Build Email Body Using Template
+# -------------------------------------------------------------
+def build_email_body(data):
+    """Load email template and inject formatted crisis sections."""
+    try:
+        with open("email_template.txt", "r") as file:
+            template = file.read()
+    except FileNotFoundError:
+        logging.error("email_template.txt not found!")
+        raise
+
+    formatted_body = template.format(
+        timestamp=datetime.now().strftime("%I:%M %p on %B %d, %Y"),
+        new_crisis_section=generate_section(data.get('new_crisis', [])),
+        resolved_crisis_section=generate_section(data.get('recent_resolved_crisis', [])),
+        active_crisis_section=generate_section(data.get('active_crisis', [])),
+    )
+
+    return formatted_body
+
+
+# -------------------------------------------------------------
+# Main Email Sending Logic with Error Handling & Logging
+# -------------------------------------------------------------
 def main(emailadd, subject, data):
     msg = MIMEMultipart()
     msg['From'] = user
     msg['To'] = emailadd
     msg['Subject'] = subject
-    body = """ 
-Dear Prime Minister,
-    
-Here is the report as of %s. 
 
-%s
-    
-Best regards,
-Dean's Crisis Management System
-    
-This is an auto-generated message. Please do not reply.
-    """ % (datetime.now().strftime("%I:%M %p on %B %d, %Y"), prettyPrintReport(data))
+    # Build email body from template
+    body = build_email_body(data)
     msg.attach(MIMEText(body, 'plain'))
-
-    # filename = report
-    # attachment = open(filename, 'rb')
-
-    # part = MIMEBase('application', 'octet-stream')
-    # part.set_payload(attachment.read())
-    # encoders.encode_base64(part)
-    # part.add_header('Content-Disposition', "attachment; filename= "+filename[filename.index("/")+1:])
-
-    # msg.attach(part)
-
-    text = msg.as_string()
+    message_string = msg.as_string()
 
     try:
         server = smtplib.SMTP('smtp.gmail.com', 587)
         server.starttls()
-        server.login(user, password)
-        print('Connection to Gmail Success!')
-        server.sendmail(user, emailadd, text)
-        server.quit()
-        print('Email sent!')
-    except:
-        #TODO: Exception Handling
-        print('Something went wrong...')
 
+        logging.info("Connecting to Gmail SMTP...")
+        server.login(user, password)
+        logging.info("SMTP login successful.")
+
+        server.sendmail(user, emailadd, message_string)
+        server.quit()
+
+        logging.info("Email successfully sent to %s", emailadd)
+        print("Email sent!")
+
+    except smtplib.SMTPAuthenticationError:
+        logging.error("SMTP authentication failed.")
+    except smtplib.SMTPException as smtp_err:
+        logging.error("SMTP error: %s", smtp_err)
+    except Exception as e:
+        logging.error("Unexpected error occurred: %s", e)
