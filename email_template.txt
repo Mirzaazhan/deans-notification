@@ -1,0 +1,23 @@
+Dear Prime Minister,
+
+Here is the report as of {timestamp}.
+
+---------------------------------------------------------------
+                    New Crises Reported in Past 30 Minutes
+---------------------------------------------------------------
+{new_crisis_section}
+
+---------------------------------------------------------------
+                    Crises Resolved in Past 30 Minutes
+---------------------------------------------------------------
+{resolved_crisis_section}
+
+---------------------------------------------------------------
+                    Current Unresolved Crisis
+---------------------------------------------------------------
+{active_crisis_section}
+
+Best regards,
+Dean's Crisis Management System
+
+This is an auto-generated message. Please do not reply.
