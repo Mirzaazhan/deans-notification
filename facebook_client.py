@@ -9,14 +9,16 @@ Leverages on Facebook's Graph API
 '''
 
 import facebook
+import os
+#Get API keys from env
+page_id = os.environ.get('FACEBOOK_PAGE_ID')
+token = os.environ.get('FACEBOOK_USER_TOKEN')
+# from configparser import ConfigParser
+# config = ConfigParser()
+# config.read('config.ini')
+# page_id = config.get('facebook', 'page_id')
 
-#Get API keys
-from configparser import ConfigParser
-config = ConfigParser()
-config.read('config.ini')
-page_id = config.get('facebook', 'page_id')
-
-token = config.get('facebook', 'user_token')
+# token = config.get('facebook', 'user_token')
 
 def main(data):
 

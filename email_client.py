@@ -3,25 +3,18 @@ import logging
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime
-from configparser import ConfigParser
+import os
+import pprint
 
-# -------------------------------------------------------------
-# Logging Setup
-# -------------------------------------------------------------
-logging.basicConfig(
-    filename='notification.log',
-    level=logging.INFO,
-    format='%(asctime)s [%(levelname)s] %(message)s'
-)
 
-# -------------------------------------------------------------
-# Load Gmail Credentials
-# -------------------------------------------------------------
-config = ConfigParser()
-config.read('config.ini')
-
-user = config.get('gmail', 'user')
-password = config.get('gmail', 'password')
+#Get API keys using env
+user = os.environ.get('GMAIL_USER')
+password = os.environ.get('GMAIL_PASSWORD')
+# from configparser import ConfigParser
+# config = ConfigParser()
+# config.read('config.ini')
+# user = config.get('gmail', 'user')
+# password = config.get('gmail', 'password')
 
 
 # -------------------------------------------------------------
