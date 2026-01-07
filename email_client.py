@@ -14,15 +14,18 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
 from email import encoders
 from datetime import datetime
-
+import os
 import pprint
 
-#Get API keys
-from configparser import ConfigParser
-config = ConfigParser()
-config.read('config.ini')
-user = config.get('gmail', 'user')
-password = config.get('gmail', 'password')
+
+#Get API keys using env
+user = os.environ.get('GMAIL_USER')
+password = os.environ.get('GMAIL_PASSWORD')
+# from configparser import ConfigParser
+# config = ConfigParser()
+# config.read('config.ini')
+# user = config.get('gmail', 'user')
+# password = config.get('gmail', 'password')
 
 def prettyPrintReport(data):
     message = ""

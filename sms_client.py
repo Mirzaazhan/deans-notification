@@ -9,13 +9,15 @@ Leverages on Twilio package
 '''
 
 from twilio.rest import Client
-
-#Get API keys
-from configparser import ConfigParser
-config = ConfigParser()
-config.read('config.ini')
-account_sid = config.get('twilio', 'account_sid')
-token = config.get('twilio', 'token')
+import os
+#Get API keys from env
+account_sid = os.environ.get('TWILIO_ACCOUNT_SID')
+token = os.environ.get('TWILIO_TOKEN')
+# from configparser import ConfigParser
+# config = ConfigParser()
+# config.read('config.ini')
+# account_sid = config.get('twilio', 'account_sid')
+# token = config.get('twilio', 'token')
 
 def main(number, message):
     client = Client(account_sid, token)
